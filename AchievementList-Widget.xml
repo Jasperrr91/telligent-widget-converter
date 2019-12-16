@@ -1,0 +1,155 @@
+<scriptedContentFragments>
+	<scriptedContentFragment name="${resource:Achievements_AchievementList_Name}" version="11.1.0.9731" description="${resource:Achievements_AchievementList_Description}" instanceIdentifier="07878a11169e4929a349bcd1c851aa7d" theme="" isCacheable="true" varyCacheByUser="true" showHeaderByDefault="true" cssClass="achievement-list" lastModified="2019-05-30 15:50:56Z">
+		<contentScript language="Velocity"><![CDATA[$core_v2_page.AddLink('stylesheet', $core_v2_widget.GetExecutedFileUrl('style.less'), "%{ Position = 'AfterTheme' }")
+
+#set ($enablePaging = $core_v2_widget.GetBoolValue('enablePaging', true))
+$core_v2_widget.ExecuteFile('inSidebar.vm')
+
+$core_v2_ui.PagedContent('pagedContent.vm')
+
+#if ($inSidebar || !$enablePaging)
+   #if ($queryType == 'accesingUser')
+		#set($remaining = $achievements.TotalCount - $achievements.PageSize)
+		#set($url = false)
+		#set($url = $core_v2_urls.UserAchievements($core_v2_user.Acessing.Id))
+		#if ($url)
+			#if ($remaining == 1)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_One_More'), $core_v2_language.FormatNumber($remaining))</a>
+			#elseif ($remaining > 1)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_Multiple_More'), $core_v2_language.FormatNumber($remaining))</a>
+			#end
+		#end
+	#elseif($queryType == 'currentUser')
+		#set($remaining = $achievements.TotalCount - $achievements.PageSize)
+		#set($url = false)
+		#set($url = $core_v2_urls.UserAchievements($core_v2_user.Current.Id))
+		#if ($url)
+			#if ($remaining == 1)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_One_More'), $core_v2_language.FormatNumber($remaining))</a>
+			#elseif ($remaining > 1)
+				<a href="$core_v2_encoding.HtmlAttributeEncode($url)">$core_v2_language.FormatString($core_v2_language.GetResource('And_Multiple_More'), $core_v2_language.FormatNumber($remaining))</a>
+			#end
+		#end
+	#end
+#else
+	#if ($viewType == 'thumbnails')
+		#registerEndOfPageHtml()
+			<script type="text/javascript">
+			jQuery(function(j){
+				var isLoadingMore = false, pageIndex = 0, hasMore =#if($hasMore) true#else false#end;
+				j(document).on('scrollend', function(e){
+					if(isLoadingMore || !hasMore)
+						return;
+
+					isLoadingMore = true;
+
+					var data = {}
+					data['$core_v2_encoding.JavascriptEncode($core_v2_ui.PageIndexQueryStringKey)'] = pageIndex + 2;
+
+					j.telligent.evolution.get({
+						url: '$core_v2_encoding.JavascriptEncode($core_v2_widget.GetExecutedFileUrl('pagedContent.vm'))',
+						data: data
+					}).then(function(response){
+						var items = $(response).find('div.content-item.thumbnail');
+						hasMore = items.data('hasmore') == 'True';
+						j('#$core_v2_encoding.JavascriptEncode($core_v2_widget.UniqueId('thumbnails'))').evolutionMasonry('append', items);
+						pageIndex++;
+						isLoadingMore = false;
+					});
+				});
+			});
+			</script>
+		#end
+	#else
+		$core_v2_ui.Pager($achievements.PageIndex, $achievements.PageSize, $achievements.TotalCount, "%{ PagedContentFile = 'pagedContent.vm' }")
+	#end
+
+	#if($queryType!='achievements')
+		<div class="navigation-list margin-top">
+			<ul class="navigation-list">
+				<li class="navigation-list-item">
+					<a href="$core_v2_encoding.HtmlAttributeEncode($core_v2_urls.Achievements())">$core_v2_language.GetResource('All_Achievements')</a>
+				</li>
+			</ul>
+		</div>
+	#end
+#end
+			]]></contentScript>
+		<headerScript language="Velocity"><![CDATA[
+#set($header = $core_v2_widget.GetStringValue('fragmentHeader', ''))
+#if($header == '')
+	#if($core_v2_urls.Current == 'Home')
+		#set ($header = '${resource:Achievements_AchievementList_Name_ForAccessingUser}')
+	#elseif($core_v2_user.Current)
+		#set ($header = $core_v2_language.FormatString($core_v2_language.GetResource('Achievements_AchievementList_Name_ForContextualUser'), $core_v2_user.Current.DisplayName))
+	#else
+		#set ($header = '${resource:Achievements_AchievementList_Name}')
+	#end
+#end
+$core_v2_widget.ApplyTokens($header)
+			]]></headerScript>
+		<configuration><![CDATA[<propertyGroup id="options" resourceName="Options">
+	<property id="fragmentHeader" resourceName="CF_Title" dataType="string" defaultValue="" controlType="Telligent.Evolution.Controls.ContentFragmentTokenStringControl, Telligent.Evolution.Platform" />
+	<property id="queryType" resourceName="CF_AchievementList_QueryType" dataType="string" defaultValue="">
+		<propertyValue value="achievements" resourceName="CF_AchievementList_QueryType_Achievements" />
+		<propertyValue value="currentUser" resourceName="CF_AchievementList_QueryType_CurrentUser" />
+		<propertyValue value="accessingUser" resourceName="CF_AchievementList_QueryType_AccessingUser" />
+	</property>
+	<property id="viewType" resourceName="Achievements_AchievementList_ViewType" dataType="string" defaultValue="standard">
+		<propertyValue value="list" resourceName="Achievements_AchievementList_ListView" />
+		<propertyValue value="thumbnails" resourceName="Achievements_AchievementList_ThumbnailView" />
+	</property>
+	<property id="sortBy" resourceName="CF_SortBy" dataType="string" defaultValue="alphabetical">
+		<propertyValue value="alphabetical" resourceName="CF_AchievementList_QueryType_SortBy_Alphabetical" />
+		<propertyValue value="createddate" resourceName="CF_AchievementList_QueryType_SortBy_CreatedDate" />
+	</property>
+	<property id="sortOrder" resourceName="CF_SortOrder" dataType="string" defaultValue="ascending">
+		<propertyValue value="ascending" resourceName="SortOrderDropDownList_Asc" />
+		<propertyValue value="descending" resourceName="SortOrderDropDownList_Desc" />
+	</property>
+	<property id="pageSize" resourceName="Pagesize" dataType="int" defaultValue="10">
+		<propertyRule type="Telligent.Evolution.Controls.PropertyRules.MinMaxValueRule, Telligent.Evolution.Platform" minValue="1" maxValue="100" />
+	</property>
+	<property id="enablePaging" resourceName="EnablePaging" dataType="bool" defaultValue="True" />
+</propertyGroup>
+		]]></configuration>
+		<languageResources><![CDATA[<language key="en-us">
+  <resource name="Achievements">Achievements</resource>
+  <resource name="Achievements_AchievementList_Description">Displays a list of achievements.</resource>
+  <resource name="Achievements_AchievementList_ListView">List</resource>
+  <resource name="Achievements_AchievementList_Name">Achievement - List</resource>
+  <resource name="Achievements_AchievementList_Name_ForAccessingUser">My Achievements</resource>
+  <resource name="Achievements_AchievementList_Name_ForContextualUser">{0}'s Achievements</resource>
+  <resource name="Achievements_AchievementList_NoAchievements">No achievements have been created yet.</resource>
+  <resource name="Achievements_AchievementList_ThumbnailView">Thumbnails</resource>
+  <resource name="Achievements_AchievementList_ViewType">View Type</resource>
+  <resource name="Achievements_UserAchievements_None">{0} hasn't obtained any achievements yet.</resource>
+  <resource name="All_Achievements">See all possible achievements</resource>
+  <resource name="And_Multiple_More">And {0} more...</resource>
+  <resource name="And_One_More">And 1 more...</resource>
+  <resource name="CF_AchievementList_QueryType">Show</resource>
+  <resource name="CF_AchievementList_QueryType_AccessingUser">Accessing user's achievements</resource>
+  <resource name="CF_AchievementList_QueryType_Achievements">All available achievements</resource>
+  <resource name="CF_AchievementList_QueryType_CurrentUser">Current contextual user's achievements</resource>
+  <resource name="CF_AchievementList_QueryType_SortBy_Alphabetical">Alphabetical</resource>
+  <resource name="CF_AchievementList_QueryType_SortBy_CreatedDate">Created Date</resource>
+  <resource name="CF_SortBy">Sort By</resource>
+  <resource name="CF_SortOrder">Sort Order</resource>
+  <resource name="CF_Title">Widget Title</resource>
+  <resource name="EnablePaging">Enable paging</resource>
+  <resource name="Options">Options</resource>
+  <resource name="Pagesize">Number of items to display</resource>
+  <resource name="SortOrderDropDownList_Asc">Ascending</resource>
+  <resource name="SortOrderDropDownList_Desc">Descending</resource>
+</language>]]></languageResources>
+		<additionalCssScript language="Unknown" />
+		<files>
+			<file name="inSidebar.vm">I3NldCAoJGluU2lkZWJhciA9IGZhbHNlKQ0KI3NldCAoJHJlZ2lvbiA9ICRjb3JlX3YyX3dpZGdldC5SZWdpb25OYW1lLlRvTG93ZXIoKSkNCiNzZXQgKCRsYXlvdXQgPSAkY29yZV92Ml9wYWdlLkxheW91dC5Ub0xvd2VyKCkpDQoNCiNpZiAoJHJlZ2lvbiA9PSAnc3BsaXQtc2lkZWJhci1sZWZ0JyB8fCAkcmVnaW9uID09ICdzcGxpdC1zaWRlYmFyLXJpZ2h0JyB8fCAkcmVnaW9uID09ICdsZWZ0LXNpZGViYXInKSANCiAgICAjc2V0ICgkaW5TaWRlYmFyID0gdHJ1ZSkNCiNlbHNlaWYgKCRyZWdpb24gPT0gJ3JpZ2h0LXNpZGViYXInICYmICEkbGF5b3V0LkNvbnRhaW5zKCdzcGxpdC1jb250ZW50JykgJiYgISRsYXlvdXQuQ29udGFpbnMoJ3NwbGl0LXNpZGViYXInKSkNCiAgICAjc2V0ICgkaW5TaWRlYmFyID0gdHJ1ZSkNCiNlbmQ=</file>
+			<file name="list.vm">I2ZvcmVhY2goJGFjaGlldmVtZW50IGluICRhY2hpZXZlbWVudHMpDQojYmVmb3JlYWxsDQoJPHVsIGNsYXNzPSJjb250ZW50LWxpc3QgY29udGVudCBtYXJnaW4tYm90dG9tIj4NCiNlYWNoDQoJI2lmICgkY29udGVudCA9PSAndXNlcmFjaGlldmVtZW50JykNCgkJPGxpIGNsYXNzPSJjb250ZW50LWl0ZW0iIGRhdGEtaHJlZj0iJGNvcmVfdjJfZW5jb2RpbmcuSHRtbEF0dHJpYnV0ZUVuY29kZSgkYWNoaWV2ZW1lbnQuQWNoaWV2ZW1lbnQuVXJsKSI+DQoJCQk8ZGl2IGNsYXNzPSJjb250ZW50IGFiYnJldmlhdGVkIj4NCgkJCQk8ZGl2IGNsYXNzPSJhdmF0YXIgcm91bmQiPg0KCQkJCQk8YSBocmVmPSIkY29yZV92Ml9lbmNvZGluZy5IdG1sQXR0cmlidXRlRW5jb2RlKCRhY2hpZXZlbWVudC5BY2hpZXZlbWVudC5VcmwpIj4kY29yZV92Ml91aS5HZXRSZXNpemVkSW1hZ2VIdG1sKCRhY2hpZXZlbWVudC5BY2hpZXZlbWVudC5CYWRnZUljb25VcmwsIDEwMCwgMTAwLCAiJXthbHQ9JGFjaGlldmVtZW50LkFjaGlldmVtZW50LlRpdGxlLGJvcmRlcj0nMCcsUmVzaXplTWV0aG9kID0gJ1pvb21BbmRDcm9wJ30iKTwvYT4NCgkJCQk8L2Rpdj4NCgkJCQk8ZGl2IGNsYXNzPSJzdW1tYXJ5Ij4NCgkJCQkJPGgyIGNsYXNzPSJuYW1lIj48YSBocmVmPSIkY29yZV92Ml9lbmNvZGluZy5IdG1sQXR0cmlidXRlRW5jb2RlKCRhY2hpZXZlbWVudC5BY2hpZXZlbWVudC5VcmwpIj4kYWNoaWV2ZW1lbnQuQWNoaWV2ZW1lbnQuVGl0bGU8L2E+PC9oMj4NCgkJCQkJPGRpdiBjbGFzcz0iY29udGVudCI+JGNvcmVfdjJfbGFuZ3VhZ2UuRm9ybWF0QWdvRGF0ZSgkYWNoaWV2ZW1lbnQuQ3JlYXRlZERhdGUpPC9kaXY+DQoJCQkJPC9kaXY+DQoJCQk8L2Rpdj4NCgkJPC9saT4NCgkjZWxzZQ0KCQk8bGkgY2xhc3M9ImNvbnRlbnQtaXRlbSIgZGF0YS1ocmVmPSIkY29yZV92Ml9lbmNvZGluZy5IdG1sQXR0cmlidXRlRW5jb2RlKCRhY2hpZXZlbWVudC5VcmwpIj4NCgkJCTxkaXYgY2xhc3M9ImNvbnRlbnQgYWJicmV2aWF0ZWQiPg0KCQkJCTxkaXYgY2xhc3M9ImF2YXRhciByb3VuZCI+DQoJCQkJCTxhIGhyZWY9IiRjb3JlX3YyX2VuY29kaW5nLkh0bWxBdHRyaWJ1dGVFbmNvZGUoJGFjaGlldmVtZW50LlVybCkiPiRjb3JlX3YyX3VpLkdldFJlc2l6ZWRJbWFnZUh0bWwoJGFjaGlldmVtZW50LkJhZGdlSWNvblVybCwgMTAwLCAxMDAsICIle2FsdD0kYWNoaWV2ZW1lbnQuVGl0bGUsYm9yZGVyPScwJyxSZXNpemVNZXRob2QgPSAnWm9vbUFuZENyb3AnfSIpPC9hPg0KCQkJCTwvZGl2Pg0KCQkJCTxkaXYgY2xhc3M9InN1bW1hcnkiPg0KCQkJCQk8aDIgY2xhc3M9Im5hbWUiPjxhIGhyZWY9IiRjb3JlX3YyX2VuY29kaW5nLkh0bWxBdHRyaWJ1dGVFbmNvZGUoJGFjaGlldmVtZW50LlVybCkiPiRhY2hpZXZlbWVudC5UaXRsZTwvYT48L2gyPg0KCQkJCQk8ZGl2IGNsYXNzPSJjb250ZW50Ij4kY29yZV92Ml9sYW5ndWFnZS50cnVuY2F0ZSgkIWFjaGlldmVtZW50LkNyaXRlcmlhLCAxMDAsICcuLi4nKTwvZGl2Pg0KCQkJCTwvZGl2Pg0KCQkJPC9kaXY+DQoJCTwvbGk+DQoJI2VuZA0KI2FmdGVyYWxsDQoJPC91bD4NCiNub2RhdGENCgk8ZGl2IGNsYXNzPSJtZXNzYWdlIG5vcmVjb3JkcyI+DQoJCSNpZigkcXVlcnlUeXBlPT0nYWNoaWV2ZW1lbnRzJykNCgkJCSRjb3JlX3YyX2xhbmd1YWdlLkdldFJlc291cmNlKCdBY2hpZXZlbWVudHNfQWNoaWV2ZW1lbnRMaXN0X05vQWNoaWV2ZW1lbnRzJykNCgkJI2Vsc2VpZigkcXVlcnlUeXBlPT0nY3VycmVudFVzZXInKQ0KCQkJJGNvcmVfdjJfbGFuZ3VhZ2UuRm9ybWF0U3RyaW5nKCRjb3JlX3YyX2xhbmd1YWdlLkdldFJlc291cmNlKCdBY2hpZXZlbWVudHNfVXNlckFjaGlldmVtZW50c19Ob25lJyksICRjb3JlX3YyX3VzZXIuQ3VycmVudC5EaXNwbGF5TmFtZSkNCgkJI2Vsc2UNCgkJCSRjb3JlX3YyX2xhbmd1YWdlLkZvcm1hdFN0cmluZygkY29yZV92Ml9sYW5ndWFnZS5HZXRSZXNvdXJjZSgnQWNoaWV2ZW1lbnRzX1VzZXJBY2hpZXZlbWVudHNfTm9uZScpLCAkY29yZV92Ml91c2VyLkFjY2Vzc2luZy5EaXNwbGF5TmFtZSkNCgkJI2VuZA0KCTwvZGl2Pg0KI2VuZA==</file>
+			<file name="pagedContent.vm">77u/I3NldCgkcXVlcnlUeXBlID0gJGNvcmVfdjJfd2lkZ2V0LkdldFN0cmluZ1ZhbHVlKCdxdWVyeVR5cGUnLCcnKSkNCiNzZXQoJHBhZ2VTaXplID0gJGNvcmVfdjJfd2lkZ2V0LkdldEludFZhbHVlKCdwYWdlU2l6ZScsMTApKQ0KI3NldCgkdmlld1R5cGUgPSAkY29yZV92Ml93aWRnZXQuR2V0U3RyaW5nVmFsdWUoJ3ZpZXdUeXBlJywnbGlzdCcpKQ0KI3NldCgkcGFnZUluZGV4ID0gJGNvcmVfdjJfdWkuR2V0Q3VycmVudFBhZ2VJbmRleCgpKQ0KI2lmICgkcXVlcnlUeXBlID09ICcnKQ0KCSNpZigkY29yZV92Ml91cmxzLkN1cnJlbnQgPT0gJ0hvbWUnKQ0KCQkkY29yZV92Ml93aWRnZXQuU2V0U3RyaW5nVmFsdWUoJ3F1ZXJ5VHlwZScsJ2FjY2Vzc2luZ1VzZXInKQ0KCQkkY29yZV92Ml93aWRnZXQuU2V0U3RyaW5nVmFsdWUoJ3NvcnRPcmRlcicsJ2Rlc2NlbmRpbmcnKQ0KCQkkY29yZV92Ml93aWRnZXQuU2V0U3RyaW5nVmFsdWUoJ3NvcnRCeScsJ2NyZWF0ZWRkYXRlJykNCgkjZWxzZWlmKCRjb3JlX3YyX3VzZXIuQ3VycmVudCkNCgkJJGNvcmVfdjJfd2lkZ2V0LlNldFN0cmluZ1ZhbHVlKCdxdWVyeVR5cGUnLCdjdXJyZW50VXNlcicpDQoJCSRjb3JlX3YyX3dpZGdldC5TZXRTdHJpbmdWYWx1ZSgnc29ydE9yZGVyJywnZGVzY2VuZGluZycpDQoJCSRjb3JlX3YyX3dpZGdldC5TZXRTdHJpbmdWYWx1ZSgnc29ydEJ5JywnY3JlYXRlZGRhdGUnKQ0KCSNlbHNlDQoJCSRjb3JlX3YyX3dpZGdldC5TZXRTdHJpbmdWYWx1ZSgncXVlcnlUeXBlJywnYWNoaWV2ZW1lbnRzJykNCgkJJGNvcmVfdjJfd2lkZ2V0LlNldFN0cmluZ1ZhbHVlKCdzb3J0T3JkZXInLCdhc2NlbmRpbmcnKQ0KCQkkY29yZV92Ml93aWRnZXQuU2V0U3RyaW5nVmFsdWUoJ3NvcnRCeScsJ3RpdGxlJykNCgkjZW5kDQoJI3NldCgkcXVlcnlUeXBlID0gJGNvcmVfdjJfd2lkZ2V0LkdldFN0cmluZ1ZhbHVlKCdxdWVyeVR5cGUnLCcnKSkNCiNlbmQNCiNzZXQoJHNvcnRCeSA9ICRjb3JlX3YyX3dpZGdldC5HZXRTdHJpbmdWYWx1ZSgnc29ydEJ5JywnYWxwaGFiZXRpY2FsJykpDQojc2V0KCRzb3J0T3JkZXIgPSAkY29yZV92Ml93aWRnZXQuR2V0U3RyaW5nVmFsdWUoJ3NvcnRPcmRlcicsJ2FzY2VuZGluZycpKQ0KI2lmICgkc29ydE9yZGVyID09ICdkZXNjZW5kaW5nJykNCgkjc2V0KCRzb3J0T3JkZXIgPSAnRGVzY2VuZGluZycpDQojZWxzZQ0KCSNzZXQoJHNvcnRPcmRlciA9ICdBc2NlbmRpbmcnKQ0KI2VuZA0KI2lmICgkc29ydEJ5ID09ICdjcmVhdGVkZGF0ZScpDQoJI3NldCgkc29ydEJ5ID0gJ0RhdGVDcmVhdGVkJykNCiNlbHNlDQoJI3NldCgkc29ydEJ5ID0gJ1RpdGxlJykNCiNlbmQNCg0KI3NldCgkY29udGVudCA9ICdhY2hpZXZlbWVudCcpDQojaWYoJHF1ZXJ5VHlwZT09J2FjaGlldmVtZW50cycpDQoJI3NldCgkYWNoaWV2ZW1lbnRzID0gJGNvcmVfdjJfYWNoaWV2ZW1lbnQuTGlzdCgiJXtFbmFibGVkPSdUcnVlJyxQYWdlU2l6ZT0kcGFnZVNpemUsUGFnZUluZGV4PSRwYWdlSW5kZXgsU29ydEJ5PSckc29ydEJ5JyxTb3J0T3JkZXI9JyRzb3J0T3JkZXInfSIpKQ0KI2Vsc2VpZigkcXVlcnlUeXBlPT0nY3VycmVudFVzZXInKQ0KCSNzZXQoJGNvbnRlbnQgPSAndXNlcmFjaGlldmVtZW50JykNCgkjc2V0KCRhY2hpZXZlbWVudHMgPSAkY29yZV92Ml91c2VyQWNoaWV2ZW1lbnQuTGlzdCggIiV7UGFnZVNpemU9JHBhZ2VTaXplLFBhZ2VJbmRleD0kcGFnZUluZGV4LFNvcnRCeT0nJHNvcnRCeScsU29ydE9yZGVyPSckc29ydE9yZGVyJyxFbmFibGVkPSdUcnVlJyxVc2VySWQ9JGNvcmVfdjJfdXNlci5DdXJyZW50LklkfSIpKQ0KI2Vsc2UNCgkjc2V0KCRjb250ZW50ID0gJ3VzZXJhY2hpZXZlbWVudCcpDQoJI3NldCgkYWNoaWV2ZW1lbnRzID0gJGNvcmVfdjJfdXNlckFjaGlldmVtZW50Lkxpc3QoIiV7UGFnZVNpemU9JHBhZ2VTaXplLFBhZ2VJbmRleD0kcGFnZUluZGV4LFNvcnRCeT0nJHNvcnRCeScsU29ydE9yZGVyPSckc29ydE9yZGVyJyxFbmFibGVkPSdUcnVlJyxVc2VySWQ9JGNvcmVfdjJfdXNlci5DdXJyZW50LklkfSIpKQ0KI2VuZA0KDQojaWYoJHZpZXdUeXBlPT0ndGh1bWJuYWlscycpDQoJI3NldCAoJGhhc01vcmUgPSBmYWxzZSkNCgkjc2V0ICgkY3VycmVudFBhZ2VkUXVhbnRpdHkgPSAoJGFjaGlldmVtZW50cy5QYWdlSW5kZXggKyAxKSAqICRhY2hpZXZlbWVudHMuUGFnZVNpemUpDQoJI2lmICgkYWNoaWV2ZW1lbnRzLlRvdGFsQ291bnQgPiAkY3VycmVudFBhZ2VkUXVhbnRpdHkpDQoJICAgICNzZXQgKCRoYXNNb3JlID0gdHJ1ZSkNCgkjZW5kDQoJJGNvcmVfdjJfd2lkZ2V0LkV4ZWN1dGVGaWxlKCd0aHVtYm5haWxzLnZtJykNCiNlbHNlDQoJJGNvcmVfdjJfd2lkZ2V0LkV4ZWN1dGVGaWxlKCdsaXN0LnZtJykNCiNlbmQNCg==</file>
+			<file name="style.less">LmNvbnRlbnQtZnJhZ21lbnQuYWNoaWV2ZW1lbnQtbGlzdCB7DQoJLmNvbnRlbnQuYWJicmV2aWF0ZWQgew0KCQlwb3NpdGlvbjogcmVsYXRpdmU7DQoJCXBhZGRpbmctbGVmdDogMTE4cHg7DQoJCW1pbi1oZWlnaHQ6IDg4cHg7DQoNCgkJPiAuYXZhdGFyIHsNCgkJCWZsb2F0OiBub25lOw0KCQkJcG9zaXRpb246IGFic29sdXRlOw0KCQkJbGVmdDogMDsNCgkJCXRvcDogMDsNCgkJfQ0KCX0NCn0NCg==</file>
+			<file name="thumbnails.vm">I2ZvcmVhY2goJGFjaGlldmVtZW50IGluICRhY2hpZXZlbWVudHMpDQojYmVmb3JlYWxsDQoJPGRpdiBjbGFzcz0iY29udGVudC1saXN0IHRodW1ibmFpbCB1aS1tYXNvbnJ5IG1hcmdpbi10b3AiIGlkPSIkY29yZV92Ml9lbmNvZGluZy5IdG1sQXR0cmlidXRlRW5jb2RlKCRjb3JlX3YyX3dpZGdldC5VbmlxdWVJZCgndGh1bWJuYWlscycpKSIgZGF0YS1jb2x1bW5jbGFzcz0idGh1bWJuYWlsLWNvbHVtbiI+DQojZWFjaA0KCSNpZiAoJGNvbnRlbnQgPT0gJ3VzZXJhY2hpZXZlbWVudCcpDQogICAgCTxkaXYgY2xhc3M9ImNvbnRlbnQtaXRlbSBjb250ZW50IHRodW1ibmFpbCIgZGF0YS11cmw9IiRjb3JlX3YyX2VuY29kaW5nLkh0bWxBdHRyaWJ1dGVFbmNvZGUoJGFjaGlldmVtZW50LkFjaGlldmVtZW50LlVybCkiIHN0eWxlPSJjdXJzb3I6IHBvaW50ZXI7Ij4NCgkJCTxkaXYgY2xhc3M9ImF2YXRhciI+DQoJCQkJJGNvcmVfdjJfdWkuR2V0UmVzaXplZEltYWdlSHRtbCgkYWNoaWV2ZW1lbnQuQWNoaWV2ZW1lbnQuQmFkZ2VJY29uVXJsLCAxNDAsIDE0MCwgIiV7YWx0PSRhY2hpZXZlbWVudC5BY2hpZXZlbWVudC5UaXRsZSxib3JkZXI9JzAnLFJlc2l6ZU1ldGhvZCA9ICdab29tQW5kQ3JvcCd9IikNCgkJICAgICAgICA8L2Rpdj4NCgkJICAgICAgICA8aDIgY2xhc3M9Im5hbWUiPg0KCQkgICAgICAgICAgICAkYWNoaWV2ZW1lbnQuQWNoaWV2ZW1lbnQuVGl0bGUNCgkJICAgICAgICA8L2gyPg0KCQk8L2Rpdj4NCgkjZWxzZQ0KICAgIAk8ZGl2IGNsYXNzPSJjb250ZW50LWl0ZW0gY29udGVudCB0aHVtYm5haWwiIGRhdGEtdXJsPSIkY29yZV92Ml9lbmNvZGluZy5IdG1sQXR0cmlidXRlRW5jb2RlKCRhY2hpZXZlbWVudC5VcmwpIiBzdHlsZT0iY3Vyc29yOiBwb2ludGVyOyI+DQoJCQk8ZGl2IGNsYXNzPSJhdmF0YXIiPg0KCQkJCSRjb3JlX3YyX3VpLkdldFJlc2l6ZWRJbWFnZUh0bWwoJGFjaGlldmVtZW50LkJhZGdlSWNvblVybCwgMTQwLCAxNDAsICIle2FsdD0kYWNoaWV2ZW1lbnQuVGl0bGUsYm9yZGVyPScwJyxSZXNpemVNZXRob2QgPSAnWm9vbUFuZENyb3AnfSIpDQoJCSAgICAgICAgPC9kaXY+DQoJCSAgICAgICAgPGgyIGNsYXNzPSJuYW1lIj4NCgkJICAgICAgICAgICAgJGFjaGlldmVtZW50LlRpdGxlDQoJCSAgICAgICAgPC9oMj4NCgkJPC9kaXY+DQoJI2VuZA0KI2FmdGVyYWxsDQoJPC9kaXY+DQojbm9kYXRhDQoJPGRpdiBjbGFzcz0ibWVzc2FnZSBub3JlY29yZHMiPg0KCQkjaWYoJHF1ZXJ5VHlwZT09J2FjaGlldmVtZW50cycpDQoJCQkkY29yZV92Ml9sYW5ndWFnZS5HZXRSZXNvdXJjZSgnQWNoaWV2ZW1lbnRzX0FjaGlldmVtZW50TGlzdF9Ob0FjaGlldmVtZW50cycpDQoJCSNlbHNlaWYoJHF1ZXJ5VHlwZT09J2N1cnJlbnRVc2VyJykNCgkJCSRjb3JlX3YyX2xhbmd1YWdlLkZvcm1hdFN0cmluZygkY29yZV92Ml9sYW5ndWFnZS5HZXRSZXNvdXJjZSgnQWNoaWV2ZW1lbnRzX1VzZXJBY2hpZXZlbWVudHNfTm9uZScpLCAkY29yZV92Ml91c2VyLkN1cnJlbnQuRGlzcGxheU5hbWUpDQoJCSNlbHNlDQoJCQkkY29yZV92Ml9sYW5ndWFnZS5Gb3JtYXRTdHJpbmcoJGNvcmVfdjJfbGFuZ3VhZ2UuR2V0UmVzb3VyY2UoJ0FjaGlldmVtZW50c19Vc2VyQWNoaWV2ZW1lbnRzX05vbmUnKSwgJGNvcmVfdjJfdXNlci5BY2Nlc3NpbmcuRGlzcGxheU5hbWUpDQoJCSNlbmQNCgk8L2Rpdj4NCiNlbmQNCg0KI3JlZ2lzdGVyRW5kT2ZQYWdlSHRtbCgndGVsbGlnZW50LmV2b2x1dGlvbi53aWRnZXRzLmFjaGlldmVtZW50VXNlckxpc3QnKQ0KCTxzY3JpcHQgdHlwZT0idGV4dC9qYXZhc2NyaXB0IiBzcmM9IiRjb3JlX3YyX2VuY29kaW5nLkh0bWxBdHRyaWJ1dGVFbmNvZGUoJGNvcmVfdjJfd2lkZ2V0LkdldEZpbGVVcmwoJ3VpLmpzJykpIj48L3NjcmlwdD4NCiNlbmQNCg0KI3JlZ2lzdGVyRW5kT2ZQYWdlSHRtbCgpDQoJPHNjcmlwdCB0eXBlPSJ0ZXh0L2phdmFzY3JpcHQiPg0KCQlqUXVlcnkoZnVuY3Rpb24oKQ0KCQl7DQoJCQlqUXVlcnkudGVsbGlnZW50LmV2b2x1dGlvbi53aWRnZXRzLmFjaGlldmVtZW50TGlzdC5yZWdpc3Rlcih7DQoJCQkJdGh1bWJuYWlsc0NvbnRhaW5lcjogalF1ZXJ5KCcjJGNvcmVfdjJfZW5jb2RpbmcuSmF2YXNjcmlwdEVuY29kZSgkY29yZV92Ml93aWRnZXQuVW5pcXVlSWQoJ3RodW1ibmFpbHMnKSknKQ0KCQkJfSk7DQoJCX0pOw0KCTwvc2NyaXB0Pg0KI2VuZA==</file>
+			<file name="ui.js">KGZ1bmN0aW9uICgkLCBnbG9iYWwpIHsNCiAgICBpZiAodHlwZW9mICQudGVsbGlnZW50ID09PSAndW5kZWZpbmVkJykgeyAkLnRlbGxpZ2VudCA9IHt9OyB9DQogICAgaWYgKHR5cGVvZiAkLnRlbGxpZ2VudC5ldm9sdXRpb24gPT09ICd1bmRlZmluZWQnKSB7ICQudGVsbGlnZW50LmV2b2x1dGlvbiA9IHt9OyB9DQogICAgaWYgKHR5cGVvZiAkLnRlbGxpZ2VudC5ldm9sdXRpb24ud2lkZ2V0cyA9PT0gJ3VuZGVmaW5lZCcpIHsgJC50ZWxsaWdlbnQuZXZvbHV0aW9uLndpZGdldHMgPSB7fTsgfQ0KDQogICAgJC50ZWxsaWdlbnQuZXZvbHV0aW9uLndpZGdldHMuYWNoaWV2ZW1lbnRMaXN0ID0gew0KICAgICAgICByZWdpc3RlcjogZnVuY3Rpb24gKGNvbnRleHQpIHsNCiAgICAgICAgCWNvbnRleHQudGh1bWJuYWlsc0NvbnRhaW5lcg0KCQkJCS5vbignY2xpY2snLCAnLmNvbnRlbnQtaXRlbScsIGZ1bmN0aW9uKGUpew0KICAgIAkJCQkJdmFyIGVsbSA9ICQodGhpcyk7DQogICAgCQkJCQl2YXIgdXJsID0gZWxtLmRhdGEoJ3VybCcpOw0KICAgIAkJCQkJaWYgKHVybCkgew0KICAgIAkJCQkJCXdpbmRvdy5sb2NhdGlvbiA9IHVybDsNCgkJCQkJfQ0KCQkJCX0pOw0KICAgICAgICB9DQogICAgfTsNCn0pKGpRdWVyeSwgd2luZG93KTsNCg==</file>
+		</files>
+	</scriptedContentFragment>
+</scriptedContentFragments>
