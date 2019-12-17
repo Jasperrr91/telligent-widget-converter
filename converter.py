@@ -32,6 +32,8 @@ class WidgetDecoder(object):
     def decode(self):
         self.save_widget_header_script()
         self.save_widget_content_script()
+        self.save_widget_configuration()
+        self.save_widget_language_resources()
         self.save_widget_files()
 
     # Decode contents of each file and save it in output folder
@@ -53,6 +55,16 @@ class WidgetDecoder(object):
         file_name = "contentScript.vm"
         self.write_file(file_name, content_script)
 
+    def save_widget_configuration(self):
+        content_script = self._xmlRoot.find(".//configuration").text
+        file_name = "configuration.xml"
+        self.write_file(file_name, content_script)
+
+    def save_widget_language_resources(self):
+        content_script = self._xmlRoot.find(".//languageResources").text
+        file_name = "languageResources.xml"
+        self.write_file(file_name, content_script)
+
     # Set correct output file and write contents to it
     def write_file(self, file_name, contents, mode="w"):
         output_file = "/".join((self._outputFolder, file_name))
@@ -67,9 +79,66 @@ class WidgetEncoder(object):
         if os.path.exists(input_folder) is False:
             sys.exit(f"Folder '{input_folder}' does not exist.")
 
-    @staticmethod
+        if not output_file:
+            output_file = ".".join((input_folder, "xml"))
+
+        self._input_folder = input_folder
+        self._output_file = output_file
+        self._root = ET.Element("scriptedContentFragments")
+        self._root.tail = "\n"
+        self._first_child = ET.SubElement(self._root, "scriptedContentFragment")
+        self._first_child.tail = "\n"
+
     def encode(self):
-        exit("I am yet to be implemented")
+        self.add_content_script()
+        self.add_header_script()
+        self.add_configuration()
+        self.add_language_resources()
+        self.write_file(self._output_file, ET.tostring(self._root), 'wb')
+
+    def add_content_script(self):
+        child = ET.SubElement(self._first_child, "contentScript")
+        child.set("language", "Velocity")
+
+        content_script = "/".join((self._input_folder, "contentScript.vm"))
+        f = open(content_script, "r")
+        child.text = f.read()
+        f.close()
+        child.tail = "\n"
+
+    def add_header_script(self):
+        child = ET.SubElement(self._first_child, "headerScript")
+        child.set("language", "Velocity")
+
+        content_script = "/".join((self._input_folder, "headerScript.vm"))
+        f = open(content_script, "r")
+        child.text = f.read()
+        f.close()
+        child.tail = "\n"
+
+    def add_configuration(self):
+        child = ET.SubElement(self._first_child, "configuration")
+
+        content_script = "/".join((self._input_folder, "configuration.xml"))
+        f = open(content_script, "r")
+        child.text = f.read()
+        f.close()
+        child.tail = "\n"
+
+    def add_language_resources(self):
+        child = ET.SubElement(self._first_child, "languageResources")
+
+        content_script = "/".join((self._input_folder, "languageResources.xml"))
+        f = open(content_script, "r")
+        child.text = f.read()
+        f.close()
+        child.tail = "\n"
+
+    # Set correct output file and write contents to it
+    def write_file(self, file_name, contents, mode="w"):
+        f = open(file_name, mode)
+        f.write(contents)
+        f.close()
 
 
 # Decode XML to source files
