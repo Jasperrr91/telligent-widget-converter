@@ -158,7 +158,7 @@ class WidgetEncoder(object):
             "languageResources.xml",
             "content_script_attributes.json"
         ]
-        
+
         for file_name in os.listdir(self._input_folder):
             if file_name not in exclude:
                 file = ET.SubElement(child, "file")
@@ -166,7 +166,6 @@ class WidgetEncoder(object):
                 f = open(file_name_full, "rb")
                 file.set("name", file_name)
                 file.text = base64.b64encode(f.read())
-                # child.text = ET.CDATA(f.read())
                 f.close()
                 file.tail = "\n"
 
