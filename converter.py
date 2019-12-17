@@ -1,4 +1,4 @@
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import base64
 import os, sys
 import fire
@@ -102,7 +102,7 @@ class WidgetEncoder(object):
 
         content_script = "/".join((self._input_folder, "contentScript.vm"))
         f = open(content_script, "r")
-        child.text = f.read()
+        child.text = ET.CDATA(f.read())
         f.close()
         child.tail = "\n"
 
@@ -112,7 +112,7 @@ class WidgetEncoder(object):
 
         content_script = "/".join((self._input_folder, "headerScript.vm"))
         f = open(content_script, "r")
-        child.text = f.read()
+        child.text = ET.CDATA(f.read())
         f.close()
         child.tail = "\n"
 
@@ -121,7 +121,7 @@ class WidgetEncoder(object):
 
         content_script = "/".join((self._input_folder, "configuration.xml"))
         f = open(content_script, "r")
-        child.text = f.read()
+        child.text = ET.CDATA(f.read())
         f.close()
         child.tail = "\n"
 
@@ -130,7 +130,7 @@ class WidgetEncoder(object):
 
         content_script = "/".join((self._input_folder, "languageResources.xml"))
         f = open(content_script, "r")
-        child.text = f.read()
+        child.text = ET.CDATA(f.read())
         f.close()
         child.tail = "\n"
 
