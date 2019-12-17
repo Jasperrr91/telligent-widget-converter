@@ -55,13 +55,31 @@ class WidgetDecoder(object):
         f.close()
 
 
+class WidgetEncoder(object):
+    def __init__(self, input_folder, output_file=False):
+        # Check if input folder exists
+        if os.path.exists(input_folder) is False:
+            sys.exit(f"Folder '{input_folder}' does not exist.")
+
+    @staticmethod
+    def encode(self):
+        exit("I am yet to be implemented")
+
+
 # Decode XML to source files
 def decode(input_file, output_folder=False):
     decoder = WidgetDecoder(input_file, output_folder)
     decoder.decode()
 
 
+# Encode source folder to XML
+def encode(input_folder, output_file=False):
+    encoder = WidgetEncoder(input_folder, output_file)
+    encoder.encode()
+
+
 if __name__ == "__main__":
     fire.Fire({
         "decode": decode,
+        "encode": encode,
     })
