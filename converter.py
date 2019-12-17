@@ -7,7 +7,7 @@ class TelligentWidget(object):
     """A Telligent Widget XML to source file decoder/encoder"""
 
     def decode(self, input, output=False):
-        # Check if input file exist
+        # Check if input file exists
         if not os.path.isfile(input):
             sys.exit(f"File '{input}' does not exist.")
 
