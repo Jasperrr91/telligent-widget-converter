@@ -1,8 +1,9 @@
-from lxml import etree as ET
 import base64
-import os, sys
 import json
+import os
+import sys
 import fire
+from lxml import etree as ET
 
 class WidgetDecoder(object):
     def __init__(self, file_name, output_folder=False):
