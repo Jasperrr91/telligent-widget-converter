@@ -94,6 +94,7 @@ class WidgetEncoder(object):
         self.add_header_script()
         self.add_configuration()
         self.add_language_resources()
+        self.add_files()
         self.write_file(self._output_file, ET.tostring(self._root), 'wb')
 
     def add_content_script(self):
@@ -133,6 +134,22 @@ class WidgetEncoder(object):
         child.text = ET.CDATA(f.read())
         f.close()
         child.tail = "\n"
+
+    def add_files(self):
+        child = ET.SubElement(self._first_child, "files")
+        child.tail = "\n"
+
+        exclude = ["headerScript.vm", "contentScript.vm", "configuration.xml", "languageResources.xml"]
+        for file_name in os.listdir(self._input_folder):
+            if file_name not in exclude:
+                file = ET.SubElement(child, "file")
+                file_name_full = "/".join((self._input_folder, file_name))
+                f = open(file_name_full, "rb")
+                file.set("name", file_name)
+                file.text = base64.b64encode(f.read())
+                # child.text = ET.CDATA(f.read())
+                f.close()
+                file.tail = "\n"
 
     # Set correct output file and write contents to it
     def write_file(self, file_name, contents, mode="w"):
