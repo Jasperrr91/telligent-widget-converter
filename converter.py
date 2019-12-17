@@ -31,6 +31,7 @@ class WidgetDecoder(object):
 
     def decode(self):
         self.save_widget_header_script()
+        self.save_widget_content_script()
         self.save_widget_files()
 
     # Decode contents of each file and save it in output folder
@@ -46,6 +47,11 @@ class WidgetDecoder(object):
         header_script = self._xmlRoot.find(".//headerScript").text
         file_name = "headerScript.vm"
         self.write_file(file_name, header_script)
+
+    def save_widget_content_script(self):
+        content_script = self._xmlRoot.find(".//contentScript").text
+        file_name = "contentScript.vm"
+        self.write_file(file_name, content_script)
 
     # Set correct output file and write contents to it
     def write_file(self, file_name, contents, mode="w"):
