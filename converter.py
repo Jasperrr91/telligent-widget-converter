@@ -107,8 +107,12 @@ class WidgetEncoder(object):
         self.add_header_script()
         self.add_configuration()
         self.add_language_resources()
+        self.add_additional_css_script()
         self.add_files()
-        self.write_file(self._output_file, ET.tostring(self._root), 'wb')
+
+        for element in self._root.iter():
+            element.tail = None
+        self.write_file(self._output_file, ET.tostring(self._root, pretty_print=True), 'wb')
 
     def add_scripted_content_attributes(self):
         content_script_attributes = "/".join((self._input_folder, "content_script_attributes.json"))
@@ -125,7 +129,6 @@ class WidgetEncoder(object):
         f = open(content_script, "r")
         child.text = ET.CDATA(f.read())
         f.close()
-        child.tail = "\n"
 
     def add_header_script(self):
         child = ET.SubElement(self._first_child, "headerScript")
@@ -135,7 +138,6 @@ class WidgetEncoder(object):
         f = open(content_script, "r")
         child.text = ET.CDATA(f.read())
         f.close()
-        child.tail = "\n"
 
     def add_configuration(self):
         child = ET.SubElement(self._first_child, "configuration")
@@ -144,7 +146,6 @@ class WidgetEncoder(object):
         f = open(content_script, "r")
         child.text = ET.CDATA(f.read())
         f.close()
-        child.tail = "\n"
 
     def add_language_resources(self):
         child = ET.SubElement(self._first_child, "languageResources")
@@ -153,11 +154,13 @@ class WidgetEncoder(object):
         f = open(content_script, "r")
         child.text = ET.CDATA(f.read())
         f.close()
-        child.tail = "\n"
+
+    def add_additional_css_script(self):
+        child = ET.SubElement(self._first_child, "additionalCssScript")
+        child.set("language", "Unknown")
 
     def add_files(self):
         child = ET.SubElement(self._first_child, "files")
-        child.tail = "\n"
 
         exclude = [
             "headerScript.vm",
@@ -175,7 +178,6 @@ class WidgetEncoder(object):
                 file.set("name", file_name)
                 file.text = base64.b64encode(f.read())
                 f.close()
-                file.tail = "\n"
 
     # Set correct output file and write contents to it
     def write_file(self, file_name, contents, mode="w"):
