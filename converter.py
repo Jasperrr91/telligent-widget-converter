@@ -1,23 +1,37 @@
 import xml.etree.ElementTree as ET
 import base64
 import os, sys
+import fire
 
-# Add ARGV
-INPUT_FILE = "AchievementList-Widget.xml"
+class TelligentWidget(object):
+    """A Telligent Widget XML to source file decoder/encoder"""
 
-OUTPUT_DIR = INPUT_FILE.split('.')[0]
+    def decode(self, input, output=False):
+        if not os.path.isfile(input):
+            sys.exit(f"File '{input}' does not exist.")
 
-if os.path.exists(OUTPUT_DIR) is False:
-    os.mkdir(OUTPUT_DIR)
+        if not output:
+            output = input.split('.')[0]
 
-tree = ET.parse(INPUT_FILE)
-root = tree.getroot()
+        if os.path.exists(output) is False:
+            os.mkdir(output)
 
-for file in root.findall(".//file"):
-    contents_encoded = file.text
-    contents = base64.b64decode(contents_encoded)
-    file_name = file.get("name")
-    output = "/".join((OUTPUT_DIR, file_name))
-    f = open(output, "w")
-    f.write(contents)
-    f.close()
+        try:
+            tree = ET.parse(input)
+        except ET.ParseError:
+            exit("Invalid XML")
+
+        root = tree.getroot()
+
+        for file in root.findall(".//file"):
+            contents_encoded = file.text
+            contents = base64.b64decode(contents_encoded)
+            file_name = file.get("name")
+            output = "/".join((output, file_name))
+            f = open(output, "wb")
+            f.write(contents)
+            f.close()
+
+
+if __name__ == '__main__':
+    fire.Fire(TelligentWidget)
