@@ -151,7 +151,14 @@ class WidgetEncoder(object):
         child = ET.SubElement(self._first_child, "files")
         child.tail = "\n"
 
-        exclude = ["headerScript.vm", "contentScript.vm", "configuration.xml", "languageResources.xml"]
+        exclude = [
+            "headerScript.vm",
+            "contentScript.vm",
+            "configuration.xml",
+            "languageResources.xml",
+            "content_script_attributes.json"
+        ]
+        
         for file_name in os.listdir(self._input_folder):
             if file_name not in exclude:
                 file = ET.SubElement(child, "file")
