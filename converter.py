@@ -1,8 +1,8 @@
 from lxml import etree as ET
 import base64
 import os, sys
+import json
 import fire
-
 
 class WidgetDecoder(object):
     def __init__(self, file_name, output_folder=False):
@@ -30,11 +30,22 @@ class WidgetDecoder(object):
         self._outputFolder = output_folder
 
     def decode(self):
+        self.save_content_script_attributes()
         self.save_widget_header_script()
         self.save_widget_content_script()
         self.save_widget_configuration()
         self.save_widget_language_resources()
         self.save_widget_files()
+
+    def save_content_script_attributes(self):
+        scripted_content_node = self._xmlRoot.find(".//scriptedContentFragment")
+
+        data = {}
+        for attribute, value in scripted_content_node.attrib.items():
+            data[attribute] = value
+
+        json_data = json.dumps(data, indent=4, separators=(',', ': '))
+        self.write_file("content_script_attributes.json", json_data)
 
     # Decode contents of each file and save it in output folder
     def save_widget_files(self):
