@@ -19,7 +19,7 @@ class WidgetDecoder(object):
 
         # Set fallback output folder to equal the name of the widget
         if not output_folder:
-            output = file_name.split('.')[0]
+            output_folder = file_name.split('.')[0]
 
         # Create output folder
         if os.path.exists(output_folder) is False:
@@ -30,6 +30,7 @@ class WidgetDecoder(object):
         self._outputFolder = output_folder
 
     def decode(self):
+        self.save_widget_header_script()
         self.save_widget_files()
 
     # Decode contents of each file and save it in output folder
@@ -40,6 +41,11 @@ class WidgetDecoder(object):
 
             file_name = file.get("name")
             self.write_file(file_name, contents, "wb")
+
+    def save_widget_header_script(self):
+        header_script = self._xmlRoot.find(".//headerScript").text
+        file_name = "headerScript.vm"
+        self.write_file(file_name, header_script)
 
     # Set correct output file and write contents to it
     def write_file(self, file_name, contents, mode="w"):
