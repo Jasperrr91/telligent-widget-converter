@@ -102,12 +102,20 @@ class WidgetEncoder(object):
         self._first_child.tail = "\n"
 
     def encode(self):
+        self.add_scripted_content_attributes()
         self.add_content_script()
         self.add_header_script()
         self.add_configuration()
         self.add_language_resources()
         self.add_files()
         self.write_file(self._output_file, ET.tostring(self._root), 'wb')
+
+    def add_scripted_content_attributes(self):
+        content_script_attributes = "/".join((self._input_folder, "content_script_attributes.json"))
+        with open(content_script_attributes) as json_file:
+            data = json.load(json_file)
+            for key, value in data.items():
+                self._first_child.set(key, value)
 
     def add_content_script(self):
         child = ET.SubElement(self._first_child, "contentScript")
